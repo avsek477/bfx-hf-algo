@@ -1,6 +1,7 @@
 /* eslint-env mocha */
 'use strict'
 
+const assert = require('assert')
 const onLifeStop = require('../../../../lib/twap/events/life_stop')
 
 describe('twap:events:life_stop', () => {
@@ -13,10 +14,30 @@ describe('twap:events:life_stop', () => {
       state: { interval },
       h: {
         updateState: () => {},
-        debug: () => {}
+        debug: () => {},
+        emit: () => {}
       }
     })
 
     setTimeout(done, 50)
+  })
+
+  it('cancels all order set by the twap algo', async () => {
+    let cancelledOrders = false
+
+    await onLifeStop({
+      state: {},
+      h: {
+        updateState: () => {},
+        debug: () => {},
+        emit: (eventName) => {
+          if (eventName === 'exec:order:cancel:all') {
+            cancelledOrders = true
+          }
+        }
+      }
+    })
+
+    assert.ok(cancelledOrders, 'did not cancel orders set by twap algo')
   })
 })
